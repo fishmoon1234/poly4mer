@@ -1,7 +1,7 @@
 # poly4mer
 A multi-physics synthesis based chemical language model for polymer inverse design.
 
-![Poly4mer architecture.](https://github.com/fishmoon1234/poly4mer/blob/main/poly4mer.pdf)
+![Poly4mer architecture.](https://github.com/fishmoon1234/poly4mer/blob/main/poly4mer.png)
 
 This repository houses the code for our work in inverse polymer design using chemical language models.
 
