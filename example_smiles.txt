@@ -1,4 +1,4 @@
-mol_id,mol_name,smiles,sea
+mol_id,mol_name,smiles
 1,PC,*OC(=O)Oc1ccc(C(C)(C)c2ccc(*)cc2)cc1
 2,PU,*CNc1ccc(Cc2ccc(NC(=O)OCCO*)cc2)cc1
 3,NYLON,*NCCCCCCNC(=O)CCCCC(=O)*

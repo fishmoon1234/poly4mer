@@ -19,7 +19,7 @@ echo -e "PEFORMING OPTIMIZATION.\n"
 #     --smiles_idx ${idx} \
 
 #test multiple initial polymers
-for idx in {1..28};
+for idx in {11,17};
 do
 #test with multiple learning rates
     for lr in {0.5,1.0};
