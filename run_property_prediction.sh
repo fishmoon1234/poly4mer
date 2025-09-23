@@ -1,4 +1,4 @@
-echo -e "PEFORMING PROPERTY PREDICTION.\n"
+echo -e "PERFORMING PROPERTY PREDICTION.\n"
 
 for idx in {11,12};
 do

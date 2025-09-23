@@ -107,7 +107,7 @@ If you find our models useful, please consider citing our papers:
 @inproceedings{yin2025fake,
   title={Fake It Till You Make It: Multi-Physics Synthesis Breaks the Data Barrier in Chemical Language Models},
   author={Yin, Naiyu and Liu, Ning and Chen, Jiuzhou and Lattimer, Brian Y and Lua, Jim and Yu, Yue},
-  booktitle={Under review}
+  booktitle={NeurIPS 2025 Machine Learning and the Physical Sciences Workshop}
 }
 ```
 

@@ -7,7 +7,7 @@ c_co=1
 max_epochs=500
 #lr=5e-1
 
-echo -e "PEFORMING OPTIMIZATION.\n"
+echo -e "PERFORMING OPTIMIZATION.\n"
 
 # python fire_optimize_smiles.py \
 #     --lr_start ${lr} \
