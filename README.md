@@ -80,10 +80,34 @@ For the optimization hyperparameters, one can change the maximum optimization st
 
 ```
 
-4. Outputs are stored in
+4. Candidate polymers are stored in
 ```
 results/optimized_smiles_canonicalized/tig${c_tig}_phrr${c_qpua}_sea${c_sea}_co${c_co}/optimized_smiles_canonicalized_${idx}_lr_${lr}.txt
 ```
+The optimization path and estimated fire property values can be found in 
+```
+results/log_optimized_prop/tig${c_tig}_phrr${c_qpua}_sea${c_sea}_co${c_co}/log_optimized_props_${idx}_lr_${lr}.txt
+```
 
 ## Citation
+
+If you find our models useful, please consider citing our papers:
+
+```
+@article{liu2025harnessing,
+  title={Harnessing large language models for data-scarce learning of polymer properties},
+  author={Liu, Ning and Jafarzadeh, Siavash and Lattimer, Brian Y and Ni, Shuna and Lua, Jim and Yu, Yue},
+  journal={Nature Computational Science},
+  volume={5},
+  number={3},
+  pages={245--254},
+  year={2025},
+  publisher={Nature Publishing Group US New York}
+}
+@inproceedings{yin2025fake,
+  title={Fake It Till You Make It: Multi-Physics Synthesis Breaks the Data Barrier in Chemical Language Models},
+  author={Yin, Naiyu and Liu, Ning and Chen, Jiuzhou and Lattimer, Brian Y and Lua, Jim and Yu, Yue},
+  booktitle={Under review}
+}
+```
 
