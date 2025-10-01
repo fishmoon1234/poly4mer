@@ -27,8 +27,8 @@ This repository houses the code for our work in forward prediction and inverse p
 
 ## Pretrained models
 Please download and extract pretrained models at
-- [Our asterisk encoder, decoder module and fire property predictors](https://drive.google.com/drive/folders/1nvXUwWs3lRk7Xsa6OuBFqlWmfSSQ_Ds4?usp=sharing)
-- [The pre-trained encoder model in smi-ted](https://github.com/IBM/materials/tree/main/models/smi_ted/smi_ted_light)
+- [Our asterisk encoder, decoder module and fire property predictors](https://drive.google.com/file/d/1ZnEITpI7JgDU3CAK1YLbguGDrsh0FqA6/view?usp=drive_link)
+- [The pre-trained encoder model in smi-ted](https://drive.google.com/file/d/1nX7ipiXXYR0xEHOZOjEhi75qMW2Ryw5J/view?usp=drive_link)
 
 
 ## Running experiments
