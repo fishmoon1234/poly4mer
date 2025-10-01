@@ -30,6 +30,34 @@ Please download and extract pretrained models at
 - [Our asterisk encoder, decoder module and fire property predictors](https://drive.google.com/file/d/1ZnEITpI7JgDU3CAK1YLbguGDrsh0FqA6/view?usp=drive_link)
 - [The pre-trained encoder model in smi-ted](https://drive.google.com/file/d/1nX7ipiXXYR0xEHOZOjEhi75qMW2Ryw5J/view?usp=drive_link)
 
+After you extracted these models in the root folder of poly4mer, the folder should look like
+```
+poly4mer/
+|-- smi_ted_light/
+    |-- bert_vocab_curated.txt
+    |-- fast_transformers/
+    |-- load.py
+    |-- smiles_prediction_results.csv
+    |-- smi-ted-Light_40.pt
+    ...
+|-- checkpoint/
+    |-- decoder_predictor/
+    |-- optimal_model/
+    |-- Star_Lang_1/
+    ...
+|-- bert_vocab_curated.txt
+|-- fire_optimize_smiles.py
+|-- Canonicalize_for_Optimize.py
+|-- args_nl.py
+|-- utils.py
+|-- models.py
+|-- fire_property_predict.py
+|-- example_smiles.txt
+|-- run_property_prediction.sh
+|-- run_design.sh
+...
+
+```
 
 ## Running experiments
 
