@@ -19,7 +19,7 @@ This repository houses the code for our work in forward prediction and inverse p
 <!-- - [PyTorch](https://pytorch.org/) -->
 - Python 3.10.18
 - numpy==1.23.5
-- torch==2.5.1
+- torch==2.8.0+cu128
 - transformers==4.53.2
 - tokenizers==0.21.2
 - rdkit==2025.3.3
