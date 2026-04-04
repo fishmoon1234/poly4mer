@@ -16,13 +16,23 @@ This repository houses the code for our work in forward prediction and inverse p
 4. We architect an autoencoding system coupling predictive modeling with generative design, enabling inverse polymer design via latent-space exploration and structure reconstruction for targeted applications.
 
 ## Requirements
-<!-- - [PyTorch](https://pytorch.org/) -->
-- Python 3.10.18
-- numpy==1.23.5
-- torch==2.8.0+cu128
-- transformers==4.53.2
-- tokenizers==0.21.2
-- rdkit==2025.3.3
+A ready-to-use Conda environment file (`poly4mer.yml`) and a Python package requirements file (`requirements.txt`) are provided.
+
+To set up the environment:
+
+```bash
+conda env create -f poly4mer.yml
+conda activate poly4mer
+pip install -r requirements.txt
+```
+
+Key dependencies include:
+- Python 3.10.18 
+- numpy==1.23.5 
+- torch==2.8.0+cu128 
+- transformers==4.53.2 
+- tokenizers==0.21.2 
+- rdkit==2025.3.3 
 - pandas==1.4.0
 
 ## Pretrained models
