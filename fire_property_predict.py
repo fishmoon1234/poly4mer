@@ -1,105 +1,105 @@
 # Deep learning
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch import optim
-# from trainers import TrainerRegressor
-#from utils import RMSELoss, get_optim_groups, get_optim_groups_freeze_encoder
-#from utils import RMSELoss, get_optim_groups, get_optim_groups_freeze_encoder
 
 # Data
 import pandas as pd
-import numpy as np
 
 # Standard library
 import args_nl as args
 import os
-import csv
-from models import prediction_Model, prediction_Model_2, Decoder, Decoder2, nonlinear_regression_model2, Star_encoder
-from utils import load_smi_ted_explicit, count_params
-
+from models import star_encoder, AutoEncoderLayer3
+from utils import load_smi_ted_explicit
 from Canonicalize_for_Optimize import canonicalize_smiles
+
+
+def build_regressor(input_dim, device):
+    return nn.Sequential(
+        nn.Linear(input_dim, 512), nn.GELU(),
+        nn.Linear(512, 512), nn.GELU(),
+        nn.Linear(512, 256), nn.GELU(),
+        nn.Linear(256, 128), nn.GELU(),
+        nn.Linear(128, 1)
+    ).to(device)
 
 
 def main(config):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    if not torch.cuda.is_available():
-        print(f'>> Device being used: {device}')
-    else:
-        print(f'>> Device being used: {device} ({torch.cuda.get_device_name(0)})')
+    print(f'>> Device being used: {device}')
 
-    # load dataset
-    #smiles_idx = 0
-    print(f">> Load example psmiles, smiles idx = {config.smiles_idx}.")
-    smiles_idx = config.smiles_idx
-    #df_init = pd.read_csv(f"example_smiles_new.csv", encoding='utf-8-sig')
-    df_init = pd.read_csv(f"example_smiles.txt", delimiter=",")
-    smile = df_init['smiles'][smiles_idx-1]
-    #smile = df_init['smiles_canonicalized'][config.smiles_idx]
-    # embeddings = torch.load(f"example_smiles_emb.pt", weights_only=True)[config.smiles_idx, :]
+    sc = torch.load('checkpoint/optimal_model/scalers.pt', map_location=device, weights_only=False)
+    z_tilde_mean = sc['X_mean'].to(device)
+    z_tilde_std = sc['X_std'].to(device)
+    y_mean = sc['Y_mean'].to(device)
+    y_std = sc['Y_std'].to(device)
 
-    print(f">> Load pre-trained encoder.")
-    base_dir = os.getcwd()
-    model_dir = f'{base_dir}/checkpoint/Star_Lang_1'
-    star_model_dir = os.path.join(model_dir, 'star', f'star_encoder_lr_{float(3e-5)}_gamma_{float(0.7)}_wd_{float(1e-5)}')
-    star_encoder_filename = '%s/star_encoder.ckpt' % (star_model_dir)
-    star_encoder = Star_encoder().to(device)
-    star_encoder.load_state_dict(torch.load(star_encoder_filename, weights_only=True))
-    star_encoder.eval()
-    # print(f'>> Total parameters of star encoder: {count_params(star_encoder)}')
+    tig_mean, tig_std = y_mean[0, 0], y_std[0, 0]
+    qpua_pk_mean, qpua_pk_std = y_mean[0, 1], y_std[0, 1]
+    sea_mean, sea_std = y_mean[0, 2], y_std[0, 2]
+    co_mean, co_std = y_mean[0, 3], y_std[0, 3]
 
+    flux_tensor = torch.tensor([[config.flux]], device=device, dtype=torch.float32)
+    thk_tensor = torch.tensor([[config.thickness]], device=device, dtype=torch.float32)
 
-    # print(f">> Load pre-trained smi-ted model.")
+    print(f">> Loading property predictors.")
+    model_tig = build_regressor(input_dim=770, device=device)
+    model_tig.load_state_dict(torch.load("checkpoint/predictor_model/tig_model_params821761_mean.ckpt", map_location=device))
+
+    model_qpua_pk = build_regressor(input_dim=770, device=device)
+    model_qpua_pk.load_state_dict(torch.load("checkpoint/predictor_model/pkhrr_model_params821761_mean.ckpt", map_location=device))
+
+    model_sea = build_regressor(input_dim=770, device=device)
+    model_sea.load_state_dict(torch.load("checkpoint/predictor_model/Ysmk_model_params821761_mean.ckpt", map_location=device))
+
+    model_co = build_regressor(input_dim=768, device=device)
+    model_co.load_state_dict(torch.load("checkpoint/predictor_model/Yco_model_params820737_mean.ckpt", map_location=device))
+
+    print(f">> Loading encoder (smi-ted + star_encoder + autoencoder).")
+    ae_ckpt = torch.load("checkpoint/decoder_predictor_autoencoder/model_params974699520_lamb1_best_val_current.ckpt", map_location=device)
+
     Smi_ted, MolTranBertTokenizer = load_smi_ted_explicit()
-    tokenizer = MolTranBertTokenizer(f"{base_dir}/smi_ted_light/bert_vocab_curated.txt")
-    Smi_ted_token = Smi_ted(tokenizer) 
-    Smi_ted_token.load_checkpoint(f"{base_dir}/smi_ted_light/smi-ted-Light_40.pt")
-    Smi_ted_token.eval()
+    tokenizer = MolTranBertTokenizer("smi_ted_light/bert_vocab_curated.txt")
+    Smi_ted_token = Smi_ted(tokenizer)
+    Smi_ted_token.load_checkpoint("smi_ted_light/smi-ted-Light_40.pt")
 
-    print(f'>> Loading pretrained smi-ted model for tig..')
-    # model_tig = load_smi_ted(folder=config.model_path_tig, ckpt_filename=config.ckpt_filename_tig, n_output=config.n_output, eval=True).to(device)
-    model_tig = nonlinear_regression_model2().to(device)
-    model_tig.load_state_dict(torch.load(f"{base_dir}/checkpoint/optimal_model/Tig_best_model.ckpt", weights_only=True, map_location="cuda"))
-    print(f'>> Loading pretrained smi-ted model for phrr..')
-    # model_qpua_pk = load_smi_ted(folder=config.model_path_qpua_pk, ckpt_filename=config.ckpt_filename_qpua_pk, n_output=config.n_output, eval=True).to(device)
-    model_qpua_pk = nonlinear_regression_model2().to(device)
-    model_qpua_pk.load_state_dict(torch.load(f"{base_dir}/checkpoint/optimal_model/pHRR_best_model.ckpt", weights_only=True, map_location="cuda"))
-    print(f'>> Loading pretrained smi-ted model for sea..')
-    # model_sea = load_smi_ted(folder=config.model_path_sea, ckpt_filename=config.ckpt_filename_sea, n_output=config.n_output, eval=True).to(device)
-    model_sea = nonlinear_regression_model2().to(device)
-    model_sea.load_state_dict(torch.load(f"{base_dir}/checkpoint/optimal_model/sea_best_model.ckpt", weights_only=True, map_location="cuda")) 
-    print(f'>> Loading pretrained smi-ted model for co..')
-    # model_co = load_smi_ted(folder=config.model_path_co, ckpt_filename=config.ckpt_filename_co, n_output=config.n_output, eval=True).to(device)
-    model_co = nonlinear_regression_model2().to(device)
-    model_co.load_state_dict(torch.load(f"{base_dir}/checkpoint/optimal_model/co_best_model.ckpt", weights_only=True, map_location="cuda"))
+    A_encoder = star_encoder(dim=1).to(device)
 
+    autoencoder = AutoEncoderLayer3(feature_size=202*768, mid_size=768*4, mid_size_2=768*2, latent_size=768).to(device)
+    autoencoder.encoder.load_state_dict(ae_ckpt["autoencoder_encoder"])
 
-    model_tig.eval()
-    model_qpua_pk.eval()
-    model_sea.eval()
-    model_co.eval()
+    for m in [model_tig, model_qpua_pk, model_sea, model_co, A_encoder, autoencoder.encoder, Smi_ted_token]:
+        m.eval()
 
+    smiles_idx = config.smiles_idx
+    df_init = pd.read_csv("example_smiles.txt", delimiter=",")
+    smile = df_init['smiles'][smiles_idx-1]
+    print(f">> Predicting properties for pSMILES idx={smiles_idx}: {smile}")
 
-    print(f">> Begin property prediction.")
     with torch.no_grad():
-        idx_t, token_embedding_t, _ = Smi_ted_token.extract_embeddings(smile)
-        idx_t, token_embedding_t = idx_t.to(device), token_embedding_t.to(device)
+        idx_t, token_emb_t, _ = Smi_ted_token.extract_embeddings(smile)
+        idx_t, token_emb_t = idx_t.to(device), token_emb_t.to(device)
         mask_439 = (idx_t == 439)
-        positions = torch.nonzero(mask_439, as_tuple=False)       # size [numbers,2]
-        selected_embeddings = token_embedding_t[positions[:, 0], positions[:, 1], :]   # select * token 
-        star_embeddings = star_encoder(selected_embeddings)
-        token_embedding_t[positions[:, 0], positions[:, 1], :] = star_embeddings
+        pos = torch.nonzero(mask_439, as_tuple=False)
+        token_emb_t[pos[:, 0], pos[:, 1], :] = A_encoder(idx_t[pos[:, 0], pos[:, 1]].view([-1, 1]).float())
+        embeddings = autoencoder.encoder(token_emb_t.view(-1, 202*768))
 
-        # latent = vae.encoder(token_embedding_t.view(-1, 202*768))
-        embedding = token_embedding_t.sum(1)#latent.detach().cpu()
+        emb_norm = (embeddings - z_tilde_mean[:, :768]) / z_tilde_std[:, :768]
+        flux_norm = (flux_tensor - z_tilde_mean[:, 769]) / z_tilde_std[:, 769]
+        thk_norm = (thk_tensor - z_tilde_mean[:, 768]) / z_tilde_std[:, 768]
+        z_tilde = torch.cat([emb_norm, thk_norm, flux_norm], dim=-1)
 
-        tig_pred = model_tig(embedding).item()
-        qpua_pk_pred = model_qpua_pk(embedding).item()
-        sea_pred = model_sea(embedding).item()
-        co_pred = model_co(embedding).item()
+        tig_pred = (model_tig(z_tilde) * tig_std + tig_mean).item()
+        pkhrr_pred = (model_qpua_pk(z_tilde) * qpua_pk_std + qpua_pk_mean).item()
+        sea_pred = (model_sea(z_tilde) * sea_std + sea_mean).item()
+        co_pred = (model_co(emb_norm) * co_std + co_mean).item()
 
-        print(f">> For pSMILES {smile}, the predicted tig: {tig_pred:.6f}, phrr: {qpua_pk_pred:.6f}, sea: {sea_pred:.6f}, co: {co_pred:.6f}.")
-    print(f">> Property prediction ends.")
+    canon = canonicalize_smiles(smile)
+    print(f">> Canonicalized pSMILES: {canon}")
+    print(f">> Conditions: flux={config.flux}, thickness={config.thickness}")
+    print(f">> Predicted Tig:  {tig_pred:.4f}")
+    print(f">> Predicted pHRR: {pkhrr_pred:.4f}")
+    print(f">> Predicted SEA:  {sea_pred:.6f}")
+    print(f">> Predicted CO:   {co_pred:.6f}")
 
 
 if __name__ == '__main__':

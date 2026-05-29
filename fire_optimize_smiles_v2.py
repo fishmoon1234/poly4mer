@@ -14,7 +14,7 @@ import os
 import csv
 from models import (prediction_Model, Decoder2, star_encoder,
                     AutoEncoderLayer3)
-from utils1 import load_smi_ted_explicit
+from utils import load_smi_ted_explicit
 from Canonicalize_for_Optimize import canonicalize_smiles
 
 def main(config):
