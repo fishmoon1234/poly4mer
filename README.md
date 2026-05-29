@@ -32,12 +32,12 @@ pip install -r requirements.txt
 
 Key dependencies include:
 - Python 3.10.18
-- numpy==1.23.5
-- torch==2.8.0+cu128
-- transformers==4.53.2
+- numpy==2.2.6
+- torch==2.10.0
+- transformers
 - tokenizers==0.21.2
 - rdkit==2025.3.3
-- pandas==1.4.0
+- pandas==2.3.3
 
 ## Pretrained models
 The SMI-TED Python package is bundled with this repository under `smi_ted_light/`; you only need to download the model weights.
