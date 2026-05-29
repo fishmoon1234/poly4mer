@@ -1,2 +1,9 @@
-smi_ted_light/
-checkpoint/
+# Model weights (hosted on HuggingFace, not in git)
+smi_ted_light/*.pt
+checkpoint/**/*.pt
+checkpoint/**/*.ckpt
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/

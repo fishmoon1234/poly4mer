@@ -123,15 +123,28 @@ class Star_encoder(nn.Module):
     def __init__(self, dim=768):
         super().__init__()
         self.mlp = nn.Sequential(
-            nn.Linear(dim, dim * 4), 
+            nn.Linear(dim, dim * 4),
             nn.ReLU(),
             nn.Linear(dim * 4, dim)
         )
 
     def forward(self, x):
-        return self.mlp(x)  
+        return self.mlp(x)
 
-    
+
+class star_encoder(nn.Module):
+    def __init__(self, dim=1):
+        super().__init__()
+        self.mlp = nn.Sequential(
+            nn.Linear(dim, 256),
+            nn.ReLU(),
+            nn.Linear(256, 768)
+        )
+
+    def forward(self, x):
+        return self.mlp(x)
+
+
 
 class prediction_Model_1(nn.Module):   # this model use original lang model structure in smi_ted_light.load.langlayer 
     def __init__(self, n_embd = 768,n_vocab = 2393):

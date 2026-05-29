@@ -268,6 +268,12 @@ def get_parser(parser=None):
     parser.add_argument(
         "--gpus", type=int, required=False, default=1, help="number of gpus to use"
     )
+    parser.add_argument(
+        "--flux", type=float, required=False, default=50, help="flux values"
+    )
+    parser.add_argument(
+        "--thickness", type=float, required=False, default=3, help="thickness values"
+    )
     # parser.add_argument('--start_epoch',
     #                        type=int, required=False, default=0,
     #                        help='Where to load the config')
