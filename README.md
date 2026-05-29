@@ -1,7 +1,9 @@
-# poly4mer
-A multi-physics synthesis based chemical language model for polymer fire property prediction and inverse design.
+# poly4mer `v2.0.0`
+A multi-physics synthesis based chemical language model for polymer fire property prediction and inverse design, with conditioning on environmental parameters (heat flux and sample thickness).
 
-![Poly4mer architecture.](https://github.com/fishmoon1234/poly4mer/blob/main/poly4mer.png)
+![Poly4mer v2 architecture.](poly4mer_v2.png)
+
+*Architecture overview: tokenized pSMILES (with `*` asterisk monomer markers) pass through the SMI-TED backbone encoder and a dedicated asterisk encoder, are projected to a 768-dim latent via the autoencoder, and are concatenated with the test-condition vector (thickness, flux) before being fed to four property predictors (Tig, pHRR, SEA, CO). The decoder + classifier reconstruct the pSMILES from the latent for inverse design. Source figure: [`poly4mer_v2.pdf`](poly4mer_v2.pdf).*
 
 This repository houses the code for our work in forward prediction and inverse polymer design using chemical language models.
 
@@ -15,6 +17,8 @@ This repository houses the code for our work in forward prediction and inverse p
 
 4. We architect an autoencoding system coupling predictive modeling with generative design, enabling inverse polymer design via latent-space exploration and structure reconstruction for targeted applications.
 
+5. Predictions and inverse design are conditioned on the heat flux and sample thickness of the test setup, so the same polymer can be evaluated under multiple fire-test scenarios.
+
 ## Requirements
 A ready-to-use Conda environment file (`poly4mer.yml`) and a Python package requirements file (`requirements.txt`) are provided.
 
@@ -27,61 +31,78 @@ pip install -r requirements.txt
 ```
 
 Key dependencies include:
-- Python 3.10.18 
-- numpy==1.23.5 
-- torch==2.8.0+cu128 
-- transformers==4.53.2 
-- tokenizers==0.21.2 
-- rdkit==2025.3.3 
+- Python 3.10.18
+- numpy==1.23.5
+- torch==2.8.0+cu128
+- transformers==4.53.2
+- tokenizers==0.21.2
+- rdkit==2025.3.3
 - pandas==1.4.0
 
 ## Pretrained models
-Please download and extract pretrained models at
-- [Our asterisk encoder, decoder module and fire property predictors](https://drive.google.com/file/d/1ZnEITpI7JgDU3CAK1YLbguGDrsh0FqA6/view?usp=drive_link)
-- [The pre-trained encoder model in smi-ted](https://drive.google.com/file/d/1nX7ipiXXYR0xEHOZOjEhi75qMW2Ryw5J/view?usp=drive_link)
+The SMI-TED Python package is bundled with this repository under `smi_ted_light/`; you only need to download the model weights.
 
-After you extracted these models in the root folder of poly4mer, the folder should look like
+Download the following from our HuggingFace mirror and place them at the paths shown:
+
+- [Fire property predictors (4 files)](https://huggingface.co/<user>/poly4mer) → `checkpoint/predictor_model/`
+  - `tig_model_params821761_mean.ckpt`
+  - `pkhrr_model_params821761_mean.ckpt`
+  - `Ysmk_model_params821761_mean.ckpt`
+  - `Yco_model_params820737_mean.ckpt`
+- [Decoder + asterisk encoder + autoencoder bundle](https://huggingface.co/<user>/poly4mer) → `checkpoint/decoder_predictor_autoencoder/`
+  - `model_params974699520_lamb1_best_val_current.ckpt`
+- [Pretrained SMI-TED encoder](https://huggingface.co/<user>/poly4mer) → `smi_ted_light/`
+  - `smi-ted-Light_40.pt`
+
+The input/output normalization stats (`checkpoint/optimal_model/scalers.pt`) ship with the repository.
+
+After downloading, the layout should look like:
+
 ```
 poly4mer/
 |-- smi_ted_light/
     |-- bert_vocab_curated.txt
     |-- fast_transformers/
     |-- load.py
-    |-- smiles_prediction_results.csv
     |-- smi-ted-Light_40.pt
     ...
 |-- checkpoint/
-    |-- decoder_predictor/
     |-- optimal_model/
-    |-- Star_Lang_1/
-    ...
+        |-- scalers.pt
+    |-- predictor_model/
+        |-- tig_model_params821761_mean.ckpt
+        |-- pkhrr_model_params821761_mean.ckpt
+        |-- Ysmk_model_params821761_mean.ckpt
+        |-- Yco_model_params820737_mean.ckpt
+    |-- decoder_predictor_autoencoder/
+        |-- model_params974699520_lamb1_best_val_current.ckpt
 |-- bert_vocab_curated.txt
-|-- fire_optimize_smiles.py
+|-- fire_optimize_smiles_v2.py
+|-- fire_property_predict_v2.py
 |-- Canonicalize_for_Optimize.py
 |-- args_nl.py
 |-- utils.py
 |-- models.py
-|-- fire_property_predict.py
 |-- example_smiles.txt
 |-- run_property_prediction.sh
 |-- run_design.sh
 ...
-
 ```
 
 ## Running experiments
 
 **Property predictor**:
 
-1. Add the pSMILES of polymers to be predicted in 
+1. Add the pSMILES of polymers to be predicted in
 ```
 example_smiles.txt
 ```
 
-2. Edit the corresponding polymer index in 
+2. Edit the corresponding polymer index and the test conditions in
 ```
 run_property_prediction.sh
 ```
+The test conditions are the heat flux (`flux`) and the sample thickness (`thickness`); both are passed to the model so the same polymer can be queried under different fire-test scenarios.
 
 3. Run predictor with the shell script
 ```
@@ -90,18 +111,24 @@ run_property_prediction.sh
 
 **Polymer design**:
 
-1. Add the pSMILES of candidate initialization polymers in 
+1. Add the pSMILES of candidate initialization polymers in
 ```
 example_smiles.txt
 ```
 
-2. Edit the corresponding polymer index in 
+2. Edit the corresponding polymer index in
 ```
 run_design.sh
 ```
-together with the penality parameters and optimization hyperparameters.
+together with the penalty parameters, the test conditions, and the optimization hyperparameters.
 
-For the penality parameters, one can tune
+The test conditions are the heat flux and the sample thickness:
+```
+flux=75
+thickness=6
+```
+
+For the penalty parameters, one can tune
 ```
 c_tig=0.1
 c_qpua=1
@@ -115,16 +142,15 @@ For the optimization hyperparameters, one can change the maximum optimization st
 3. Run inverse design with the shell script
 ```
 ./run_design.sh
-
 ```
 
 4. Candidate polymers are stored in
 ```
-results/optimized_smiles_canonicalized/tig${c_tig}_phrr${c_qpua}_sea${c_sea}_co${c_co}/optimized_smiles_canonicalized_${idx}_lr_${lr}.txt
+results/optimized_smiles_canonicalized/tig${c_tig}_phrr${c_qpua}_sea${c_sea}_co${c_co}_flux${flux}_thickness${thickness}/optimized_smiles_canonicalized_${idx}_lr_${lr}.txt
 ```
-The optimization path and estimated fire property values can be found in 
+The optimization path and estimated fire property values can be found in
 ```
-results/log_optimized_prop/tig${c_tig}_phrr${c_qpua}_sea${c_sea}_co${c_co}/log_optimized_props_${idx}_lr_${lr}.txt
+results/log_optimized_prop/tig${c_tig}_phrr${c_qpua}_sea${c_sea}_co${c_co}_flux${flux}_thickness${thickness}/log_optimized_props_${idx}_lr_${lr}.txt
 ```
 
 ## Citation
@@ -148,4 +174,3 @@ If you find our models useful, please consider citing our papers:
   booktitle={NeurIPS 2025 Machine Learning and the Physical Sciences Workshop}
 }
 ```
-
