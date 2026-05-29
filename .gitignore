@@ -2,6 +2,8 @@
 smi_ted_light/*.pt
 checkpoint/**/*.pt
 checkpoint/**/*.ckpt
+# Keep small normalization stats in git
+!checkpoint/optimal_model/scalers.pt
 
 # Python
 __pycache__/

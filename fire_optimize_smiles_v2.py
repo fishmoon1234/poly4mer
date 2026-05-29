@@ -58,19 +58,15 @@ def main(config):
         ).to(device)
 
     model_tig = build_regressor(input_dim=770)
-    # model_tig.load_state_dict(torch.load("checkpoint/optimal_model/Tig_best_model.ckpt", map_location=device))
     model_tig.load_state_dict(torch.load("checkpoint/predictor_model/tig_model_params821761_mean.ckpt", map_location=device))
     
     model_qpua_pk = build_regressor(input_dim=770)
-    # model_qpua_pk.load_state_dict(torch.load("checkpoint/optimal_model/pHRR_best_model.ckpt", map_location=device))
     model_qpua_pk.load_state_dict(torch.load("checkpoint/predictor_model/pkhrr_model_params821761_mean.ckpt", map_location=device))
     
     model_sea = build_regressor(input_dim=770)
-    # model_sea.load_state_dict(torch.load("checkpoint/optimal_model/sea_best_model.ckpt", map_location=device)) 
     model_sea.load_state_dict(torch.load("checkpoint/predictor_model/Ysmk_model_params821761_mean.ckpt", map_location=device))
     
     model_co = build_regressor(input_dim=768)
-    # model_co.load_state_dict(torch.load("checkpoint/optimal_model/co_best_model.ckpt", map_location=device))
     model_co.load_state_dict(torch.load("checkpoint/predictor_model/Yco_model_params820737_mean.ckpt", map_location=device))
 
     ae_ckpt = torch.load("checkpoint/decoder_predictor_autoencoder/model_params974699520_lamb1_best_val_current.ckpt", map_location=device)
@@ -193,22 +189,22 @@ def main(config):
     "optimized_smiles_canonicalized",
     "log_optimized_prop"
     ]
-    [os.makedirs(f"results_new2/{subdir}/{save_file}", exist_ok=True) for subdir in base_paths]
+    [os.makedirs(f"results/{subdir}/{save_file}", exist_ok=True) for subdir in base_paths]
 
 
-    with open(f"results_new2/optimized_embeddings/{save_file}/optimized_embeddings_{smiles_idx}_lr_{config.lr_start:.4f}.txt", "w") as f:
+    with open(f"results/optimized_embeddings/{save_file}/optimized_embeddings_{smiles_idx}_lr_{config.lr_start:.4f}.txt", "w") as f:
         for embd in save_embeddings:
             np.savetxt(f, embd.cpu().numpy(), fmt="%.6f")
 
-    with open(f"results_new2/optimized_smiles/{save_file}/optimized_smiles_{smiles_idx}_lr_{config.lr_start:.4f}.txt", "w") as f:
+    with open(f"results/optimized_smiles/{save_file}/optimized_smiles_{smiles_idx}_lr_{config.lr_start:.4f}.txt", "w") as f:
         for ep, smiles in save_smiles:
             f.write(f"Epoch {ep}: {smiles}\n")
 
-    with open(f"results_new2/optimized_smiles_canonicalized/{save_file}/optimized_smiles_canonicalized_{smiles_idx}_lr_{config.lr_start:.4f}.txt", "w") as f:
+    with open(f"results/optimized_smiles_canonicalized/{save_file}/optimized_smiles_canonicalized_{smiles_idx}_lr_{config.lr_start:.4f}.txt", "w") as f:
         for ep, smiles in save_canonicalized_smiles:
             f.write(f"Epoch {ep}: {smiles}\n")
 
-    with open(f"results_new2/log_optimized_prop/{save_file}/log_optimized_props_{smiles_idx}_lr_{config.lr_start:.4f}.txt", "w") as f:
+    with open(f"results/log_optimized_prop/{save_file}/log_optimized_props_{smiles_idx}_lr_{config.lr_start:.4f}.txt", "w") as f:
         f.write('tig, qpua_pk, sea, co\n')
         writer  = csv.writer(f)
         for row in save_fire_props:
