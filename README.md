@@ -44,14 +44,14 @@ The SMI-TED Python package is bundled with this repository under `smi_ted_light/
 
 Download the following from our HuggingFace mirror and place them at the paths shown:
 
-- [Fire property predictors (4 files)](https://huggingface.co/<user>/poly4mer) → `checkpoint/predictor_model/`
+- [Fire property predictors (4 files)](https://huggingface.co/fishmoon1234/poly4mer) → `checkpoint/predictor_model/`
   - `tig_model_params821761_mean.ckpt`
   - `pkhrr_model_params821761_mean.ckpt`
   - `Ysmk_model_params821761_mean.ckpt`
   - `Yco_model_params820737_mean.ckpt`
-- [Decoder + asterisk encoder + autoencoder bundle](https://huggingface.co/<user>/poly4mer) → `checkpoint/decoder_predictor_autoencoder/`
+- [Decoder + asterisk encoder + autoencoder bundle](https://huggingface.co/fishmoon1234/poly4mer) → `checkpoint/decoder_predictor_autoencoder/`
   - `model_params974699520_lamb1_best_val_current.ckpt`
-- [Pretrained SMI-TED encoder](https://huggingface.co/<user>/poly4mer) → `smi_ted_light/`
+- [Pretrained SMI-TED encoder](https://huggingface.co/fishmoon1234/poly4mer) → `smi_ted_light/`
   - `smi-ted-Light_40.pt`
 
 The input/output normalization stats (`checkpoint/optimal_model/scalers.pt`) ship with the repository.
