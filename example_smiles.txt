@@ -7,7 +7,6 @@ mol_id,mol_name,smiles
 6,SAN,*C=C(*)C#N.*C=C(*)c1ccccc1
 7,ABS,*C=CC=C*.*C=C(*)C#N.*C=C(*)C1=CC=CC=C1
 8,PPO,*Oc1c(C)cc(cc1C)*
-9,HIPS,*CC(*)C1=CC=CC=C1
 10,PEKK,*Oc1ccc(cc1)C(=O)c1ccc(cc1)C(=O)c1ccc(cc1)*
 11,PMMA,*CC(*)(C)C(=O)OC
 12,PP,*CC(*)C
@@ -18,7 +17,6 @@ mol_id,mol_name,smiles
 17,PVC,*CC(Cl)*
 18,PEI,CC(C)(C1=CC=C(OC2=CC3=C(C=C2)C(=O)N(*)C3=O)C=C1)C1=CC=C(OC2=CC3=C(C=C2)C(=O)N(C3=O)C2=CC(*)=CC=C2)C=C1
 19,PAI,*C(=O)C1=CC2=C(C=C1)C(=O)N(C2=O)C1=CC=C(N*)C=C1
-20,SAN,*C=C(*)C#N.*C=C(*)c1ccccc1
 21,EVA,*CC(*)OC(C)=O.*CC*
 22,EBA,*CC(*)C(=O)OCCCC.*CC*
 23,ABS,*C=C(*)C#N.*C=C(*)c1ccccc1.*C=CC=C*
