@@ -21,10 +21,10 @@ echo -e "PERFORMING OPTIMIZATION.\n"
 #     --smiles_idx ${idx} \
 
 #test multiple initial polymers
-for idx in 11 12;
+for idx in {12,4};
 do
 #test with multiple learning rates
-    for lr in 0.1;
+    for lr in {0.1,1};
     do
         echo "Running idx=$idx with lr=$lr ..."
         python fire_optimize_smiles_v2.py \
