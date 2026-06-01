@@ -1,2 +1,11 @@
-smi_ted_light/
-checkpoint/
+# Model weights (hosted on HuggingFace, not in git)
+smi_ted_light/*.pt
+checkpoint/**/*.pt
+checkpoint/**/*.ckpt
+# Keep small normalization stats in git
+!checkpoint/optimal_model/scalers.pt
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/

@@ -1,10 +1,12 @@
 # tunable hyperparameters
-c_tig=0.1
+c_tig=1
 c_qpua=1
 c_sea=1
 c_co=1
 #idx=22
 max_epochs=500
+flux=50
+thickness=3
 #lr=5e-1
 
 echo -e "PERFORMING OPTIMIZATION.\n"
@@ -19,20 +21,22 @@ echo -e "PERFORMING OPTIMIZATION.\n"
 #     --smiles_idx ${idx} \
 
 #test multiple initial polymers
-for idx in {11,17};
+for idx in {12,4};
 do
 #test with multiple learning rates
-    for lr in {0.5,1.0};
+    for lr in {0.1,1};
     do
         echo "Running idx=$idx with lr=$lr ..."
-        python fire_optimize_smiles.py \
+        python fire_optimize_smiles_v2.py \
         --lr_start ${lr} \
         --max_epochs ${max_epochs} \
         --c_tig ${c_tig} \
         --c_qpua ${c_qpua} \
         --c_sea ${c_sea} \
         --c_co ${c_co} \
-        --smiles_idx ${idx} 
+        --smiles_idx ${idx} \
+        --flux ${flux} \
+        --thickness ${thickness}
 
     done
 done

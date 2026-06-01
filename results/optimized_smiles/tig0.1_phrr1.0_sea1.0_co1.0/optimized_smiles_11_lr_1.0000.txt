@@ -1,3 +1,0 @@
-Epoch -1: *CC(*)(C)C(=O)OC
-Epoch 201: *CC(*)(C)C(=O)OCc
-Epoch 439: *CC(*)(C)C(=O)OCcc

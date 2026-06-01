@@ -1,5 +1,0 @@
-Epoch 0: *CC(*)Cl
-Epoch 230: **CC*
-Epoch 245: *CCC*
-Epoch 386: *CCC(*)Cl
-Epoch 471: *CCC(*)C

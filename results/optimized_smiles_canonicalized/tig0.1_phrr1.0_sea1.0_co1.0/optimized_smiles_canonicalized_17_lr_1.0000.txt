@@ -1,7 +1,0 @@
-Epoch 0: *CC(*)Cl
-Epoch 116: **CC*
-Epoch 123: *CCC*
-Epoch 192: *CCC(*)Cl
-Epoch 236: *CCC(*)C
-Epoch 328: *CCC(O)CN
-Epoch 426: *NCC(O)CN

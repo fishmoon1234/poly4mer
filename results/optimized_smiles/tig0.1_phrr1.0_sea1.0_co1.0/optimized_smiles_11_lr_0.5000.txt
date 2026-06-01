@@ -1,2 +1,0 @@
-Epoch -1: *CC(*)(C)C(=O)OC
-Epoch 404: *CC(*)(C)C(=O)OCc
