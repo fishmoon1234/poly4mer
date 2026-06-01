@@ -124,13 +124,13 @@ together with the penalty parameters, the test conditions, and the optimization 
 
 The test conditions are the heat flux and the sample thickness:
 ```
-flux=75
-thickness=6
+flux=50
+thickness=3
 ```
 
 For the penalty parameters, one can tune
 ```
-c_tig=0.1
+c_tig=1
 c_qpua=1
 c_sea=1
 c_co=1
