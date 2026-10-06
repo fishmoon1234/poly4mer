@@ -9,3 +9,8 @@ checkpoint/**/*.ckpt
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+
+# poly4mer v3: weights and run outputs stay out of git
+*.ckpt
+latent_cache.pt
+runs/
