@@ -187,11 +187,48 @@ def read_smiles_file(path):
 
 
 def read_property_data(path):
-    """Labeled table with columns smiles_canonicalized, thickness, flux, tig, pkhrr, sea, co.
+    """Read a labeled data file into a DataFrame with the columns
+    smiles_canonicalized, thickness, flux, tig, pkhrr, sea, co.
 
+    How to format the file (three accepted layouts)
+    ------------------------------------------------
+    1. CSV with a header line (file name ends in .csv). Column names must include
+       the seven names above; extra columns are ignored, order does not matter.
+
+           smiles_canonicalized,thickness,flux,tig,pkhrr,sea,co
+           *CC(*)c1ccccc1,3.0,50,45.0,1150.0,0.14,0.032
+           *CC(*)(C)C(=O)OC,3.0,35,,900.0,0.011,
+
+    2. Whitespace-separated text file WITH a header line (.smi or .txt). The header
+       must contain the word smiles_canonicalized; otherwise same rules as the CSV.
+
+           smiles_canonicalized thickness flux tig pkhrr sea co
+           *CC(*)c1ccccc1 3.0 50 45.0 1150.0 0.14 0.032
+
+    3. Whitespace-separated text file WITHOUT a header, exactly 10 columns in this
+       order (the layout of the simulated v2 data set):
+
+           index name smiles thickness flux tig pkhrr sea co igt
+
+       e.g.   105046 POL2_22526 *C(CCCC(N)=O)C(*)CO[Si](C)C 15.0 32.6 176.2 213.9 0.045 0.064 1
+
+    Value rules
+    -----------
+    * smiles_canonicalized: RDKit-canonical pSMILES with bare '*' attachment points,
+      exactly two stars for a linear repeat unit (see evaluate_reconstruction_v3.py,
+      canonical_psmiles()). No spaces inside the string.
+    * thickness in mm, flux in kW/m^2, tig in s, pkhrr in kW/m^2, co in kg/kg; sea in
+      the same units as the checkpoint's property predictor.
+    * Missing property values: leave the field empty (CSV) or write NaN / nan.
+      A row needs smiles, thickness, flux and at least one of the four properties.
+    * Every row is one measurement condition. The same polymer may appear on several
+      rows with different thickness/flux.
+
+    What the function does with the rows
+    ------------------------------------
     Rows without SMILES/thickness/flux are dropped, as are rows where all four
     properties are missing. Individual missing properties stay NaN and are
-    masked in the loss.
+    masked per property in the loss, so partial labels are fine.
     """
     if os.path.splitext(path)[1].lower() == ".csv":
         df = pd.read_csv(path)
