@@ -134,14 +134,10 @@ PROP_USES_THK_FLUX = {"tig": True, "pkhrr": True, "sea": False, "co": False}
 V2_COLUMNS = ["index", "name", "smiles_canonicalized", "thickness", "flux",
               "tig", "pkhrr", "sea", "co", "igt"]
 
-# File names of optional pretrained property-head files (read only if
-# --init_heads_dir points to a directory holding them).
-PROP_PRETRAINED_FNAMES = {
-    "tig":   "tig_model_params821761_mean.ckpt",
-    "pkhrr": "pkhrr_model_params821761_mean.ckpt",
-    "sea":   "Ysmk_model_params821761_mean.ckpt",
-    "co":    "Yco_model_params820737_mean.ckpt",
-}
+# File names of optional pretrained property-head files, one state_dict per head,
+# read only if --init_heads_dir points to a directory holding them.
+PROP_PRETRAINED_FNAMES = {name: f"{name}_predictor.ckpt" for name in PROPERTY_NAMES}
+# -> tig_predictor.ckpt, pkhrr_predictor.ckpt, sea_predictor.ckpt, co_predictor.ckpt
 
 
 # =============================================================================
