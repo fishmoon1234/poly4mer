@@ -1,6 +1,10 @@
 """
-train_poly4mer_v3.py: joint training of pSMILES reconstruction + fire-property prediction
-=========================================================================================
+train_poly4mer_v3_property_reg.py: joint training of pSMILES reconstruction + fire-property prediction
+=====================================================================================================
+
+Lives in training/; models.py, utils1.py, smi_ted_light/ and poly4mer_v3.ckpt are in the
+repository root one level up. Run it from the repository root:
+    python training/train_poly4mer_v3_property_reg.py ...
 
 This is the joint-training script for the poly4mer v3 model (star encoder,
 encoder, decoder, token predictor, and property heads).
@@ -103,9 +107,11 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-if SCRIPT_DIR not in sys.path:
-    sys.path.insert(0, SCRIPT_DIR)
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))        # .../training
+REPO_DIR = os.path.dirname(SCRIPT_DIR)                           # repository root: models.py, utils1.py, smi_ted_light/
+for _p in (REPO_DIR, SCRIPT_DIR):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 from models import prediction_Model, Decoder2, star_encoder, AutoEncoderLayer3
 from utils1 import load_smi_ted_explicit, find_smi_ted_dir
@@ -473,7 +479,7 @@ def main():
                     help="Comma-separated SMILES-only files; their seq_acc selects the best checkpoint.")
     ap.add_argument("--val_labeled", default=None,
                     help="Optional labeled files; per-property relative error is printed (not used for selection).")
-    ap.add_argument("--init_recon_ckpt", default=os.path.join(SCRIPT_DIR, "poly4mer_v3.ckpt"),
+    ap.add_argument("--init_recon_ckpt", default=os.path.join(REPO_DIR, "poly4mer_v3.ckpt"),
                     help="Initial weights for all networks incl. property heads (default: poly4mer_v3.ckpt).")
     ap.add_argument("--fresh_heads", action="store_true",
                     help="Do not load property heads from --init_recon_ckpt; start them random and "

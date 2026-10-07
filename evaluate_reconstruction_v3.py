@@ -34,12 +34,13 @@ Example (run from inside this folder):
 """
 import argparse, csv, os, random, sys, time
 import torch
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-if SCRIPT_DIR not in sys.path:
-    sys.path.insert(0, SCRIPT_DIR)
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))        # repository root
+for _p in (SCRIPT_DIR, os.path.join(SCRIPT_DIR, "training")):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 from models import star_encoder, AutoEncoderLayer3, Decoder2, prediction_Model
 from utils1 import load_smi_ted_explicit, find_smi_ted_dir
-from train_poly4mer_v3 import forward_pass, MAX_LEN, EMB_DIM, VOCAB_SIZE
+from train_poly4mer_v3_property_reg import forward_pass, MAX_LEN, EMB_DIM, VOCAB_SIZE
 from rdkit import Chem, RDLogger
 RDLogger.DisableLog("rdApp.*")
 

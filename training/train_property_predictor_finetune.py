@@ -1,6 +1,10 @@
 """
-phase1_finetune_heads.py: Phase I fine-tuning of the property predictor
-=======================================================================
+train_property_predictor_finetune.py: Phase I fine-tuning of the property predictor
+===================================================================================
+
+Lives in training/; models.py, utils1.py, smi_ted_light/ and poly4mer_v3.ckpt are in the
+repository root one level up. Run it from the repository root:
+    python training/train_property_predictor_finetune.py ...
 
 Freezes the whole encoder module and trains ONLY the four property heads
 (tig, pHRR, SEA, CO) on labeled data, for example synthetic (simulated) data.
@@ -16,7 +20,7 @@ latents. Re-running with the same cache file skips the embedding step.
 What is trained
 ---------------
 Only `property_regressors` (one 5-layer MLP per property, see build_regressor()
-in train_poly4mer_v3.py). The decoder module is not loaded at all.
+in train_poly4mer_v3_property_reg.py). The decoder module is not loaded at all.
 
 Loss
 ----
@@ -50,17 +54,17 @@ the validation loss has not improved for N epochs.
 
 Example
 -------
-    python phase1_finetune_heads.py \\
+    python training/train_property_predictor_finetune.py \\
         --train_labeled my_data/synthetic_train.csv \\
         --val_labeled   my_data/synthetic_val.csv \\
         --out_dir       runs/phase1 \\
         --epochs 50 --lr 1e-4 --batch_size 256
 
 Evaluate heads without training (any checkpoint that carries heads):
-    python phase1_finetune_heads.py --eval_only --checkpoint runs/phase1/heads_best.ckpt \\
+    python training/train_property_predictor_finetune.py --eval_only --checkpoint runs/phase1/heads_best.ckpt \\
         --val_labeled my_data/synthetic_val.csv --out_dir runs/phase1_eval
 
-Data format: identical to train_poly4mer_v3.py (--train_labeled / --val_labeled),
+Data format: identical to train_poly4mer_v3_property_reg.py (--train_labeled / --val_labeled),
 see README.md. Units: thickness mm, flux kW/m^2, tig s, pHRR kW/m^2, CO kg/kg.
 """
 
@@ -76,13 +80,15 @@ import pandas as pd
 import torch
 import torch.nn.functional as F
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-if SCRIPT_DIR not in sys.path:
-    sys.path.insert(0, SCRIPT_DIR)
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))        # .../training
+REPO_DIR = os.path.dirname(SCRIPT_DIR)                           # repository root: models.py, utils1.py, smi_ted_light/
+for _p in (REPO_DIR, SCRIPT_DIR):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 from models import star_encoder, AutoEncoderLayer3
 from utils1 import load_smi_ted_explicit, find_smi_ted_dir
-from train_poly4mer_v3 import (MAX_LEN, EMB_DIM, STAR_TOKEN_ID, PROPERTY_NAMES, PROP_USES_THK_FLUX,
+from train_poly4mer_v3_property_reg import (MAX_LEN, EMB_DIM, STAR_TOKEN_ID, PROPERTY_NAMES, PROP_USES_THK_FLUX,
                                parse_paths, load_labeled, compute_property_stats, build_regressor,
                                count_params, lr_at_epoch, set_lr)
 
@@ -112,7 +118,7 @@ def load_frozen_encoder(ckpt, device):
 
 @torch.no_grad()
 def encode(smiles, smi_ted, A, enc, device):
-    """List of pSMILES -> latent z [B, 768]. Mirrors forward_pass() in train_poly4mer_v3.py."""
+    """List of pSMILES -> latent z [B, 768]. Mirrors forward_pass() in train_poly4mer_v3_property_reg.py."""
     idx, emb, _ = smi_ted.extract_embeddings(smiles)
     idx = idx.to(device)
     emb = emb.to(device).clone()
@@ -228,7 +234,7 @@ def main():
     ap = argparse.ArgumentParser(description="Phase I: fine-tune the property heads on labeled data with the encoder frozen.")
     ap.add_argument("--train_labeled", default=None, help="Comma-separated labeled files (required unless --eval_only).")
     ap.add_argument("--val_labeled", default=None, help="Comma-separated labeled files for validation and model selection.")
-    ap.add_argument("--checkpoint", default=os.path.join(SCRIPT_DIR, "poly4mer_v3.ckpt"),
+    ap.add_argument("--checkpoint", default=os.path.join(REPO_DIR, "poly4mer_v3.ckpt"),
                     help="Checkpoint providing the frozen encoder and (by default) the initial heads and statistics.")
     ap.add_argument("--encoder_checkpoint", default=None,
                     help="If --checkpoint is a heads-only file (heads_best.ckpt), the full checkpoint to take the encoder from "
@@ -272,7 +278,7 @@ def main():
     if "autoencoder_encoder" in ck:
         enc_ck = ck
     else:  # heads-only file: encoder comes from the full checkpoint
-        enc_path = args.encoder_checkpoint or os.path.join(SCRIPT_DIR, "poly4mer_v3.ckpt")
+        enc_path = args.encoder_checkpoint or os.path.join(REPO_DIR, "poly4mer_v3.ckpt")
         enc_ck = torch.load(enc_path, map_location="cpu", weights_only=False, mmap=True)
         print(f">> encoder taken from {enc_path}")
 
@@ -397,7 +403,7 @@ def main():
         best = torch.load(best_path, map_location="cpu", weights_only=False)
         full = {k: ck[k] for k in ("star_encoder", "autoencoder_encoder", "decoder", "predictor")} if "decoder" in ck else None
         if full is None:
-            enc_path = args.encoder_checkpoint or os.path.join(SCRIPT_DIR, "poly4mer_v3.ckpt")
+            enc_path = args.encoder_checkpoint or os.path.join(REPO_DIR, "poly4mer_v3.ckpt")
             src = torch.load(enc_path, map_location="cpu", weights_only=False, mmap=True)
             full = {k: src[k] for k in ("star_encoder", "autoencoder_encoder", "decoder", "predictor")}
         full["property_regressors"] = best["property_regressors"]
