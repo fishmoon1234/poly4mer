@@ -4,9 +4,11 @@ fire_inverse_design_v3.py: latent-space inverse design with poly4mer_v3.ckpt
 
 The seed pSMILES is encoded to a single 768-d latent vector z. z is then the only
 free variable: it is moved by plain gradient descent on a fire objective built from
-the four property heads (tig, pHRR, SEA, CO) carried in the checkpoint. At every
+the four property heads (tig, pHRR, SEA, CO) carried in the checkpoint. For every
 step the current z is also decoded back to a token sequence, so the run yields a
-stream of candidate pSMILES alongside the continuous property path.
+stream of candidate pSMILES alongside the continuous property path. Decoding can 
+optionally be deferred and performed in batches, giving increased performance at
+the expense of memory usage.
 
 Nothing except z is updated. smi-ted, the encoder, the decoder, the token predictor
 and the four property heads are all frozen and in eval mode.
@@ -151,6 +153,9 @@ def get_parser():
     p.add_argument("--lr_start", type=float, default=0.01, help="Latent step size.")
     p.add_argument("--max_epochs", type=int, default=5000, help="Number of descent steps.")
     p.add_argument("--seed", type=int, default=1995)
+    p.add_argument("--decode_batch_size", type=int, default=1,
+                   help="Latents decoded together; 1 for sequential decoding (default).")
+    p.add_argument("--threads", type=int, default=None, help="Number of CPU compute threads.")
 
     # objective weights
     p.add_argument("--c_tig", type=float, default=1.0)
@@ -182,6 +187,13 @@ def get_parser():
 
 
 def main(config):
+    if config.decode_batch_size < 1:
+        raise SystemExit("--decode_batch_size must be positive")
+    if config.threads is not None:
+        if config.threads < 1:
+            raise SystemExit("--threads must be positive")
+        torch.set_num_threads(config.threads)
+
     # ------------------------------------------------------------- 1. Device --
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f">> Device being used: {device}")
@@ -267,13 +279,14 @@ def main(config):
                    * y_std[k] + y_mean[k]
                 for k, n in enumerate(NAMES)}
 
-    def decode(z):
-        """Latent -> pSMILES string by greedy argmax over the token predictor."""
+    def decode_batch(latents):
+        """Decode every independent row, in order."""
         with torch.no_grad():
-            rec = decoder(z).view(-1, MAX_LEN, EMB_DIM)
-            ids = lang_model(rec.view(-1, EMB_DIM)).view(-1, MAX_LEN, VOCAB_SIZE).argmax(-1)[0]
-            toks = [id_to_token.get(int(i), "") for i in ids.tolist()]
-            return "".join(t for t in toks if t not in SPECIAL)
+            rec = decoder(latents).view(-1, MAX_LEN, EMB_DIM)
+            ids = lang_model(rec.reshape(-1, EMB_DIM)).view(-1, MAX_LEN, VOCAB_SIZE).argmax(-1)
+            return ["".join(id_to_token.get(int(i), "") for i in row
+                            if id_to_token.get(int(i), "") not in SPECIAL)
+                    for row in ids.tolist()]
 
     # -------------------------------------------------- 5. Initialization --
     if config.seed_smi is not None:
@@ -299,26 +312,36 @@ def main(config):
     save_canonicalized_smiles = []
     designs = {}                    # canonical pSMILES -> (step, properties at that step)
 
+    pending_latents = []
+
+    def flush_decodes():
+        strings = decode_batch(torch.cat(pending_latents, dim=0))
+        first = len(save_fire_props) - len(pending_latents)
+        for ep, smiles_string in enumerate(strings, start=first):
+            raw = dict(zip(NAMES, save_fire_props[ep]))
+            canon_smiles = canonical_psmiles(smiles_string)
+
+            if smiles_string != save_smiles[-1][-1]:
+                save_smiles.append((ep, smiles_string))
+                if canon_smiles is not None:
+                    save_canonicalized_smiles.append((ep, canon_smiles))
+
+            if (canon_smiles is not None and canon_smiles != seed_canon
+                    and canon_smiles not in designs
+                    and count_stars(canon_smiles) >= N_STARS_MIN
+                    and (config.keep_unphysical or config.clamp or raw["pkhrr"] >= 0)):
+                designs[canon_smiles] = (ep, {n: raw[n] for n in NAMES})
+
+        pending_latents.clear()
+
     # ------------------------------------------------- 6. Optimization loop --
     for ep in range(config.max_epochs):
         # (a) predict at the CURRENT latent
         raw = predict(embeddings)
 
-        # (b) decode the SAME latent, so the structure and the numbers recorded at a
-        #     given step always correspond to each other
-        smiles_string = decode(embeddings.detach())
-        canon_smiles = canonical_psmiles(smiles_string)
-
-        if smiles_string != save_smiles[-1][-1]:
-            save_smiles.append((ep, smiles_string))
-            if canon_smiles is not None:
-                save_canonicalized_smiles.append((ep, canon_smiles))
-
-        if (canon_smiles is not None and canon_smiles != seed_canon
-                and canon_smiles not in designs
-                and count_stars(canon_smiles) >= N_STARS_MIN
-                and (config.keep_unphysical or config.clamp or raw["pkhrr"].item() >= 0)):
-            designs[canon_smiles] = (ep, {n: raw[n].item() for n in NAMES})
+        # (b) snapshot the SAME latent for deferred decoding, so the structure and the 
+        #     numbers recorded at a given step always correspond to each other
+        pending_latents.append(embeddings.detach().clone())
 
         # (c) optional clip to physical ranges
         used = ({n: raw[n].clamp(PROP_RANGE[n][0], PROP_RANGE[n][1]) for n in NAMES}
@@ -342,6 +365,12 @@ def main(config):
 
         if config.save_embeddings:
             save_embeddings.append(embeddings.clone().detach())
+
+        if len(pending_latents) == config.decode_batch_size:
+            flush_decodes()
+
+    if pending_latents:
+        flush_decodes()
 
     print(">> Optimization Finished.")
 
