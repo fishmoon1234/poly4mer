@@ -128,6 +128,32 @@ poly4mer/
 
 
 
+## Datasets
+
+The data behind the paper is on the HuggingFace Hub at
+[fishmoon1234/Polymer_Fire_Properties](https://huggingface.co/datasets/fishmoon1234/Polymer_Fire_Properties):
+
+| File | Rows | Contents |
+|---|---:|---|
+| `v1_1.7M_synthetic_structure.smi` | 1,735,755 | Enumerated repeat-unit structures, one pSMILES per line |
+| `v2_110k_FDS.smi` | 109,993 | Simulated cone-calorimeter cases; 55,000 repeat units at two exposures each |
+| `experimental_flux_thickness.smi` | 203 | Measured cone-calorimeter data, 49 polymers |
+| `10folds_data/` | | The ten-fold experimental splits, one folder per property |
+
+Nothing has to be downloaded to run the scripts here: `data/10folds_data/` in this
+repository already carries the fold splits, file for file identical to `10folds_data/` on
+the hub. Only the folder names differ, `tig/ pkhrr/ sea/ co/` here against
+`tig_exp_data/ phrr_exp_data/ SEA_exp_data_avg/ CO_exp_data_avg/` there.
+
+The dataset card documents the column layout and units of each file, and the two caveats
+worth reading before training on `v2`: runs that never ignited carry a censored `tig` of
+exactly 900.0 s, and `sea` and `co` do not vary with the exposure.
+
+```bash
+hf download fishmoon1234/Polymer_Fire_Properties --repo-type dataset --local-dir polymer_fire_properties/
+```
+
+
 ## Model components
 
 
@@ -301,8 +327,9 @@ docstring at the top of each script for the expected data format.
 ## Reproducing the cross-validation tables
 
 `data/10folds_data/` carries the 10-fold experimental splits for all four properties, the
-same ones that selected the heads bundled in `poly4mer_v3.ckpt`. tig and pHRR have 228 rows
-each with thickness and flux; SEA and CO are the per-polymer averaged sets, 44 and 32 rows,
+same ones that selected the heads bundled in `poly4mer_v3.ckpt`, and the same ones
+published at [fishmoon1234/Polymer_Fire_Properties](https://huggingface.co/datasets/fishmoon1234/Polymer_Fire_Properties).
+tig and pHRR have 228 rows each with thickness and flux; SEA and CO are the per-polymer averaged sets, 44 and 32 rows,
 and carry no test conditions because those heads take the latent alone.
 
 Run the whole thing as a demo, which scores the bundled heads, re-trains one property's
